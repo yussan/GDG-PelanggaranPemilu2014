@@ -1,0 +1,146 @@
+/*CAMERA MANAGEMENT*/
+ var pictureSource;   // picture source
+ var destinationType; // sets the format of returned value 
+
+    // Wait for PhoneGap to connect with the device
+    //
+    document.addEventListener("deviceready",onDeviceReady,false);
+
+    // PhoneGap is ready to be used!
+    //
+    function onDeviceReady() {
+      pictureSource=navigator.camera.PictureSourceType;
+      destinationType=navigator.camera.DestinationType;
+    }
+
+    // Called when a photo is successfully retrieved
+    //
+    function onPhotoDataSuccess(imageData) {
+      // Uncomment to view the base64 encoded image data
+      // console.log(imageData);
+
+      // Get image handle
+      //
+      var PreviewImage = document.getElementById('PreviewImage');
+      var laporan = document.getElementById('laporan');
+
+      // Unhide image elements
+      //
+      laporan.style.display = 'block';
+
+      // Show the captured photo
+      // The inline CSS rules are used to resize the image
+      //
+      PreviewImage.src = "data:image/jpeg;base64," + imageData;
+      
+    }
+
+    // Called when a photo is successfully retrieved
+    //
+    function onPhotoURISuccess(imageURI) {
+      // Uncomment to view the image file URI 
+      // console.log(imageURI);
+
+      // Get image handle
+      //
+      var PreviewImage = document.getElementById('PreviewImage');
+      var laporan = document.getElementById('laporan');
+
+      // Unhide image elements
+      //
+      laporan.style.display = 'block';
+
+      // Show the captured photo
+      // The inline CSS rules are used to resize the image
+      //
+      PreviewImage.src = imageURI;
+
+    }
+
+    // A button will call this function
+    //
+    function capturePhoto() {
+      // Take picture using device camera and retrieve image as base64-encoded string
+      navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 50 });
+    }
+
+    // A button will call this function
+    //
+    function capturePhotoEdit() {
+      // Take picture using device camera, allow edit, and retrieve image as base64-encoded string  
+      navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 50, allowEdit: true }); 
+    }
+
+    // A button will call this function
+    //
+    function getPhoto(source) {
+      // Retrieve image file location from specified source
+      navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50, 
+      	destinationType: destinationType.FILE_URI,
+      	sourceType: source });
+    }
+
+    //clear chace
+    function clearChace(){
+      navigator.camera.cleanup();
+    }
+
+    //Upload image to server
+    function uploadPhoto(imageURI){
+      //get data
+      var img = document.getElementById('PreviewImage');
+      var imageURI = img.src;
+      var status = ;
+
+      if (!imageURI || (img.style.display == "none")) {
+        document.getElementById('PreviewImage').innerHTML = "Take picture or select picture from library first.";
+        return;
+      }
+
+      //verify server has been entered
+      server = 'http://192.168.43.5/2014-Project/phonegap-upload-test/upload.php';//server url
+      if (server) {          
+            // Specify transfer options
+            var options = new FileUploadOptions();
+            options.fileKey="file";
+            options.fileName=imageURI.substr(imageURI.lastIndexOf('/')+1);
+            options.mimeType="image/jpeg";
+            options.chunkedMode = false;
+
+            // Transfer picture to server
+            var ft = new FileTransfer();
+            ft.upload(imageURI, server, function(r) {
+              document.getElementById('PreviewImage').innerHTML = "Upload successful: "+r.bytesSent+" bytes uploaded.";              
+            }, function(error) {
+              document.getElementById('PreviewImage').innerHTML = "Upload failed: Code = "+error.code;             
+            }, options);
+          }
+        }
+
+    // Called if something bad happens.
+    // 
+    function onFail(message) {
+    	alert('Failed because: ' + message);
+    }
+    /*END OF CAMERA MANAGEMENT*/
+
+    /*LOADING ANIMATION*/
+    $( document ).on( "click", ".show-page-loading-msg", function() {
+      var $this = $( this ),
+      theme = $this.jqmData( "theme" ) || $.mobile.loader.prototype.options.theme,
+      msgText = $this.jqmData( "msgtext" ) || $.mobile.loader.prototype.options.text,
+      textVisible = $this.jqmData( "textvisible" ) || $.mobile.loader.prototype.options.textVisible,
+      textonly = !!$this.jqmData( "textonly" );
+      html = $this.jqmData( "html" ) || "";
+      $.mobile.loading( "show", {
+        text: msgText,
+        textVisible: textVisible,
+        theme: theme,
+        textonly: textonly,
+        html: html
+      });
+    })
+    .on( "click", ".hide-page-loading-msg", function() {
+      $.mobile.loading( "hide" );
+    });
+/*END OF LOADING ANIMATION*/

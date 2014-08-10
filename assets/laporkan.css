@@ -1,0 +1,24 @@
+.small-text{
+	color:#000;
+	font-size: 11px;
+	text-shadow:none;
+}
+
+.normal-text{
+	color:#000;
+	font-size: 14px;
+	text-shadow:none;
+}
+
+.full-bg{
+	background-image: url(images/bg_main.jpg)
+}
+
+.main_menu{
+	padding: 30px;
+	background-color: #f6f6f6;
+	color : #000;
+	width: 700%;
+	text-decoration: none;
+	margin:10px 0 10px 0;
+}

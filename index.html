@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Pelanggaran Pemilu</title>
+	<link rel="stylesheet" href="themes/AndroidHoloDarkLight.min.css" />
+	<link rel="stylesheet" href="jqm/jquery.mobile-1.4.2.min.css" />
+	<link rel="stylesheet" href="assets/laporkan.css" />
+	<script src="jqm/jquery-2.1.1.min.js"></script>
+	<script src="jqm/jquery.mobile-1.4.2.min.js"></script>
+	<!--<script src="assets/cordova.js"></script>-->
+	<script src="assets/pelanggaran.js"></script>
+	<script src="assets/cordova-user.js"></script>
+	<script>
+		function onLoad(){
+			document.addEventListener("deviceready",onDeviceReady,false);
+			$(window).on("navigate", function (event, data) {
+				var direction = data.state.direction;
+				if (direction == 'back') {
+		    		$.mobile.back();//jquery mobile back page
+		    	} if (direction == 'forward') {
+				    $.mobile.forward();//jquery mobile forward page
+				}
+			});
+			$("#umum").on("pageshow" , function() {
+				$.mobile.loading("show"); //show loading
+				get_all_report();
+			});
+			$("#presiden").on("pageshow" , function() {
+				alert('Sistem dalam proses konstruksi');
+			});
+			$("#pertanyaan").on("pageshow" , function() {
+				$.mobile.loading("show"); //show loading
+				get_all_tanya();
+			});
+		}
+
+		//MELAPORKAN PELANGGARAN
+		function laporkan_pesan(){
+			var email = $('#txt-email').val();//get email data
+			var laporan = $('#txt-laporan').val();//get email data;
+			var img = $('#PreviewImage'); //mengambil gambar dari cache untuk dikirim ke server
+			var imageURI = img.src;
+			var email = 'lapor@bawaslu.go.id';//email bawaslu
+			// var status = ; //status of send data
+
+			alert('Laporan anda telah terkirim ke BAWASLU \n Cek email untuk status, \n Terimakasih');
+
+			// //set empty input
+			$('#txt-email').val('');//email back to empty
+			$('#txt-laporan').val('');//input laporan back to empty
+			imageURI = '';//image back to empty
+			$.mobile.back(); //when emal send complete
+		}
+
+		function tanya_pesan(){
+			alert('Pertanyaan anda telah terkirim ke KPU \n Cek email untuk status, \n Terimakasih');
+			$.mobile.back(); //when emal send complete
+		}
+
+		function close_app(){
+			var c= confirm('Anda Yakin Ingin Keluar!');
+			if(c == true) {
+				navigator.app.exitApp();
+			} else {
+				//nothing
+			}			
+		}
+
+	</script>
+
+</head>
+<body onload="onLoad()">
+
+	<!--main page-->
+	<div style="background-image:url('assets/images/bg_main.jpg')" data-role="page" id="main" >
+
+		<div data-role="header">
+		</div>
+
+		<div data-role="content">
+			<div>
+				<a data-transition="flip" href="#umum" class="ui-btn ui-icon-delete ui-btn-icon-top">Pelanggaran Umum</a>
+				<a data-transition="flip" href="#presiden" class="ui-btn ui-icon-delete ui-btn-icon-top">Pelanggaran Capres Cawapres</a>
+				<a data-transition="flip" href="#laporan" class="ui-btn ui-icon-delete ui-btn-icon-top">Laporkan Pelanggaran</a>
+				<a data-transition="flip" href="#pertanyaan" class="ui-btn ui-icon-delete ui-btn-icon-top">Pertanyaan Pemilu</a>
+				<a  data-transition="flip" href="#about" class="ui-btn ui-icon-delete ui-btn-icon-top">About</a>
+				<a onclick="close_app()" class="ui-btn ui-icon-delete ui-btn-icon-top">Keluar</a>
+			</div>
+
+			<!--grap picture-->
+			<div data-role="popup" id="grappic" data-theme="none">
+				<div data-role="collapsibleset" data-theme="b" data-content-theme="a" data-collapsed-icon="arrow-r" data-expanded-icon="arrow-d" style="margin:0; width:250px;">			
+					<button data-rel="close" onclick="capturePhoto();"><h2>Take Picture</h2></button>
+					<button data-rel="close" onclick="getPhoto(pictureSource.PHOTOLIBRARY);"><h2>From Gallery</h2></button>
+				</div><!-- /collapsible -->
+			</div><!-- /collapsible set -->
+			<!--end of grap picture-->	
+
+
+			
+		</div>
+
+		<div data-theme="a" style="color:#fff; text-shadow:none" data-position="fixed" data-role="footer">
+			
+			<h1><center><a href="http://fossil-id.org"><img width="150px" src="assets/images/fosslogo.png"></a></center></h1>
+		</div>
+	</div>
+	<!--end of main page-->
+
+	<!--page pelanggaran umum-->
+	<div data-role="page" id="umum" data-theme="a">
+		<div data-role="header" data-position="fixed">
+			<a href="#menu" class="ui-btn ui-btn-inline ui-icon-bars ui-btn-icon-left" data-rel="panel">menu</a><h1>Laporan Pelanggaran</h1>
+			<a onclick="refresh()" class="ui-btn ui-btn-inline ui-icon-refresh ui-btn-icon-left">refresh</a>
+			<div data-role="navbar">
+				<ul>
+					<li><a onclick="show_report_status('verified')" href="#" data-icon="" data-theme="a">verified</a></li>
+					<li><a onclick="show_report_status('unverified')" href="#" data-icon="" data-theme="a">unverified</a></li>
+				</ul>
+			</div><!-- /navbar -->
+		</div>
+		<div class="full-bg" data-role="content" data-theme="a">
+			<h3 style="color:#fff;text-decoration:none" id="title" class="ui-bar ui-bar-a">Pelanggaran Terbaru</h3>
+			<br/>			
+			<div data-theme="a" data-role="content" style="display:none" id="mycontent">
+				<div class="item">
+					<ul data-theme="a" style="display:none" id="list-berita" data-role="listview">
+					</ul>
+				</div>
+			</div>			
+		</div>
+
+		<!--preview single post-->
+		<div data-theme="b" data-role="content" id="mysingle"></div>
+
+		<!--laporanku-->
+		<div data-theme="b" data-role="content">
+			<!--preview image div-->
+		</div>		
+
+
+		<div data-role="panel" data-theme="a"  id="menu">
+			<div class="ui-body ui-body-a ui-corner-all">
+				<p>Dibagian ini, anda bisa mengetahui berbagai pelanggaran yang telah dilakukan oleh partai maupun calon yang peserta pemilu</p>
+			</div>
+			<button data-rel="close" onclick="get_all_report()" class="ui-btn">Semua Pelanggaran</button>
+			<button data-rel="close" onclick="get_location_report()"  class="ui-btn">Lokasi Pelanggaran</button>
+			<button data-rel="close" onclick="get_tags_report()"  class="ui-btn">Tags Pelanggaran</button>
+			<button onclick="$.mobile.back();" class="ui-btn">Kembali</button>
+
+		</div>
+
+
+	</div>
+	<!--end of page pelanggaran umum-->
+
+	<!--page pertanyaan-->
+	<div id="pertanyaan" data-role="page">
+		<div data-role="header">
+			<a href="#tanya-menu" class="ui-btn ui-btn-inline ui-icon-bars ui-btn-icon-left" data-rel="panel">menu</a>
+			<h1>Pertanyaan Pemilu</h1>
+			<a onclick="refresh()" class="ui-btn ui-btn-inline ui-icon-bars ui-btn-icon-left" data-rel="panel">refresh</a>
+		</div>
+		
+		<div class="full-bg" data-role="content">
+
+			<h3 style="color:#fff;text-decoration:none" id="title" class="ui-bar ui-bar-a">Pertanyaan Pemilu</h3>
+			<br/>			
+			
+			<div id="tanya-item" class="item">
+				<ul style="display:none" data-theme="a" id="list-pertanyaan" data-role="listview">						
+				</ul>
+			</div>
+			<div id="tanya-single" style="display:none">
+			</div>
+		</div>
+
+		<div data-position="fixed" data-role="footer">
+			
+		</div>
+
+		<div data-role="panel" data-theme="a"  id="tanya-menu">
+			<div class="ui-body ui-body-a ui-corner-all">
+				<p>Tanyakan hal-hal yang ingin anda ketahui dalam pemilu</p>
+			</div>
+			<button data-rel="close" onclick="get_all_tanya()" class="ui-btn">Semua Pertanyaan</button>
+			<a href="#tanya" data-transition="flip" class="ui-btn">Bertanya</a>
+			<button onclick="$.mobile.back();" class="ui-btn">Kembali</button>
+
+		</div>
+
+	</div>
+	<!--end of page pertanyaan-->
+
+	<!--page pelanggaran presiden-->
+	<div data-role="page" id="presiden" data-theme="a">
+		<div data-role="header" data-position="fixed">
+			<a href="#presiden-menu" class="ui-btn ui-btn-inline ui-icon-bars ui-btn-icon-left" data-rel="panel">menu</a><h1>Pelanggaran Capres dan Cawapres</h1>
+			<a onclick="refresh()" class="ui-btn ui-btn-inline ui-icon-refresh ui-btn-icon-left">refresh</a>
+			<div data-role="navbar">
+				<ul>
+					<li><a onclick="alert('Dalam Proses Pengembangan')" href="#" data-icon="" data-theme="a">Prabowo-Hata</a></li>
+					<li><a onclick="alert('Dalam Proses Pengembangan')" href="#" data-icon="" data-theme="a">Jokowi-JK</a></li>
+				</ul>
+			</div><!-- /navbar -->
+		</div>
+		<div class="full-bg" data-role="content" data-theme="a">
+			<h3 style="color:#fff;text-decoration:none" id="title" class="ui-bar ui-bar-a">Pelanggaran Terbaru</h3>
+			<br/>			
+			<div data-theme="a" data-role="content" style="display:none" id="mycontent">
+				<div class="item">
+					<ul data-theme="a" style="display:block" id="list-berita" data-role="listview">
+						<li><a href="#">API belum tersedia</a></li>
+					</ul>
+				</div>
+			</div>			
+		</div>
+
+		<!--preview single post-->
+		<div data-theme="b" data-role="content" id="mysingle"></div>
+
+		<!--laporanku-->
+		<div data-theme="b" data-role="content">
+			<!--preview image div-->
+		</div>		
+
+
+		<div data-role="panel" data-theme="a"  id="presiden-menu">
+			<div class="ui-body ui-body-a ui-corner-all">
+				<p>Dibagian ini anda bisa mengetahui berbagai macam pelanggaran yang telah dilakukan oleh capres dan cawapress Indonesia 2014</p>
+			</div>
+			<button data-rel="close" onclick="alert('API belum tersedia')" class="ui-btn">Semua Pelanggaran</button>
+			<button data-rel="close" onclick="alert('Dalam Proses Pengembangan')"  class="ui-btn">Data Capres dan Cawapress</button>
+			<button onclick="$.mobile.back();" class="ui-btn">Kembali</button>
+
+		</div>
+
+
+	</div>
+	<!--end of page pelanggaran presiden-->
+
+	<!--page about-->
+	<div data-theme="b" id="about" data-dialog="true" data-role="page">
+		<div data-role="header"><h1>About</h1></div>
+		<div data-theme="d" style="background-color:#000" data-role="content">
+			<p style="color:#fff;text-shadow:none"><strong>Laporan Pelanggaran</strong><br/>
+				Adalah aplikasi untuk melaporkan dan memotor pelanggaran-pelanggaran pemilu yang langsung didapat dari Badan Pengawas Pemilu(BAWASLU). Aplikasi ini support di Android dan iPhone.
+				<br/>
+				Dibuat menggunakan API PEMILU dari PERLUDEM
+				<br/>
+				<br/>
+				<strong>Dibuat Oleh</strong><br/>
+				Team FOSSIL Camelia<br/><br/>
+				Yussan<br/>
+				Rangge<br/>
+				Singgih<br/>
+				Masinul<br/>
+				Kris<br/>
+				Upik<br/>
+			</p>
+
+		</div>
+		<div data-role="footer"><h1>By FOSSIL &copy; 2014 </h1></div>
+	</div>
+	<!--end of page about-->
+
+	<!--page laporan-->
+	<div data-theme="b" id="laporan" data-dialog="true" data-role="page">
+		<div data-role="header"><h1>Laporan</h1></div>
+		<div data-theme="d" style="background-color:#000" data-role="content">
+			<p style="color:#fff;text-shadow:none"><strong>Ketentuan</strong><br/>
+				laporan yang anda kirim melalui aplikasi ini akan langsung masuk ke email BAWASLU, pastikan keakuratan data laporan dan email anda untuk terus menciptakan pemilu bersih diindonesia
+				<br/>
+				<br/>
+				<label for="txt-email">Email : <span style="font-size:10px">status laporan akan dikirimkan keemail ini</span></label>
+				<input style="background-color:#000" placeholder="masukan email anda" type="email" id="txt-email" required/>
+				<label for="txt-email">Nama : <span style="font-size:10px">nama sesuai KTP</span></label>
+				<input style="background-color:#000" placeholder="masukan email anda" type="email" id="txt-email" required/>
+				<strong>Laporan</strong>
+				<label for="txt-laporan">Laporan : <span style="font-size:10px">maks 500 karakter</span></label>
+				<textarea style="background-color:#000" placeholder="masukan laporan anda" name="textarea" id="txt-laporan" required></textarea>
+				<div id="laporan">
+					<div style="background-color:#000" data-role="collapsible">
+						<h4>Foto <span style="font-size:10px">maks 300KB</span></h4>
+						<p>
+							<button onclick="capturePhoto();" data-content-theme="false" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-camera">Camera</button>
+							<button onclick="getPhoto(pictureSource.PHOTOLIBRARY);" data-content-theme="false" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-grid">From Gallery</button>
+						</p>
+					</div>
+					<img style="display:none;width:100%" id="PreviewImage" alt="laporanku" src=""/>
+				</div>
+				<button onclick="laporkan_pesan()" data-content-theme="false" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-comment">Lapor</button>
+			</p>
+
+		</div>
+		<div data-role="footer"><h1>By FOSSIL &copy; 2014 </h1></div>
+	</div>
+	<!--end of page laporan-->
+
+	<!--page tanya-->
+	<div data-theme="b" id="tanya" data-dialog="true" data-role="page">
+		<div data-role="header"><h1>Pertanyaan</h1></div>
+		<div data-theme="d" style="background-color:#000" data-role="content">
+			<p style="color:#fff;text-shadow:none"><strong>Ketentuan</strong><br/>
+				Anda mempunyai pertanyaan seputar pemilu, tanyakan disini dan dapatkan jawaban lengkapnya<br/>
+				<br/>
+				<strong>Pertanyaan</strong>
+				<label for="txt-laporan">Laporan : <span style="font-size:10px">maks 500 karakter</span></label>
+				<textarea style="background-color:#000" placeholder="masukan laporan anda" name="textarea" id="txt-laporan" required></textarea>
+				<label for="txt-email">Email : <span style="font-size:10px">status laporan akan dikirimkan keemail ini</span></label>
+				<input style="background-color:#000" placeholder="masukan email anda" type="email" id="txt-email" required/>
+				<button onclick="tanya_pesan()" data-content-theme="false" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-comment">Tanya</button>
+			</p>
+
+		</div>
+		<div data-role="footer"><h1>By FOSSIL &copy; 2014 </h1></div>
+	</div>
+	<!--end of page tanya-->
+
+
+</body>
+</html>

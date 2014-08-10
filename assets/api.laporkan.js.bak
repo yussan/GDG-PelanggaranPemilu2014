@@ -1,0 +1,75 @@
+document.addEventListener("deviceready",onDeviceReady,false);
+
+function onDeviceReady() { //device ready
+	$('#loading').show()//show loading
+	get_data();
+
+}
+
+function get_data(){
+	var AmbilData;
+	$.ajax({
+		type: 'GET',
+		url : 'http://127.0.0.1/2014-Project/GDG-Laporkan/',
+		async : true,
+		beforeSend : function(x) {
+			if(x && x.overrideMimeType) {
+				x.overrideMimeType("application/j-son;charset=UTF-8");
+			}
+		} ,
+		dataType : 'json',
+		success : function(data){
+			AmbilData = data.items;
+			$('#loading').hide();//hide loading 
+			$('#timeline').show();
+			$.each(AmbilData, function(index, loaddata) {
+				$.('#dataList').append(
+					//show timeline as html
+					'<div class=" ui-grid-a">	
+					<div class="ui-grid-a">	
+						<div class="ui-block">			
+							<div class="uploadby ui-block-a"><a class="ui-icon-plus" onclick="">Uploadby : '+loaddata.nama+'</a> | 24 Agustus 2014</div>
+						</div>
+					</div>
+
+					<div class="uploadimage"><img src="assets/images/xenovia.png"/></div>	
+
+					<!--usermenu-->
+					<div data-role="tabs" id="tabs">
+						<div data-role="navbar">
+							<ul>
+								<li><a href="#one" data-icon="bars"   data-ajax="false"></a></li>
+								<li><a href="#two" data-icon="comment" data-ajax="false"></a></li>							
+							</ul>
+						</div>
+						<div id="one" class="ui-body-d ui-content">
+							<div class="ui-bar ui-bar-a">Partai Terkait</div>
+							<div class="ui-grid-a btn-aksi">
+								<div class="ui-block-a"><a href="#" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-plus">65k</a></div>
+								<div class="ui-block-b"><a href="#" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-minus">3.4k</a></div>
+							</div>
+							<div class="status ui-grid-a">
+								pelanggaran yang meliputi beberapa pemasangan spanduk yang tidak sesuai dengan prosedur
+							</div>
+						</div>
+						<div class="comments" id="two">
+							<div class="ui-field-contain">
+								<div class="all-comments">
+									<p><strong>Andi : </strong>ini sering kita jumpai dimanapun</p>
+									<p><strong>Herman : </strong>separah itukah</p>
+								</div>
+								<form>
+									<textarea placeholder="opini" cols="40" rows="2" name="textarea-1" id="textarea-1"></textarea>
+									<input style="font-size:12px" type="submit" value="komentar">
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>'
+				); //end of append
+			});
+		}, error : function(jqXHR, exception) {
+			alert('load timeline bermasalah');
+		}
+	});
+}
